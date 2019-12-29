@@ -144,4 +144,37 @@ http://192.168.93.128/bWAPP/sqli_2.php?movie=6%20or%201=1%20limit%201,1%20#&acti
 * fetch object 함수를 사용하면 secure coding이 가능(미리 sql 구문이 어떻게 생겼는지 web이 미리 보내놓은 후 이와 다른 값이 보내질 경우 무시해버립니다)
 * sql injection(post/search) 방식의 경우 앞에서와 마찬가지로 url을 통해 확인하지 못합니다(post는 body를 통하기 때문)
 * burp suite를 통해 body 부분을 잡은 후 or 1=1 # 를 더해주면 모든 목록을 확인이 가능합니다.
+## SQL injection(sqlmap 과 metasploit 활용)
+### sqlmap
+* sqlmap의 활용
+  * mysql,oracle,postgresql,microsoft sql server 등의 관리시스템을 지원
+  * boolean-based blind,time-based blind, error-based, union query-based와 같은 sql-injection  기술을 지원
+  * 또한 여러가지 활동을 합니다. blog.naver.com/isc0304/220372379862 참고
+* -p TESTPARAMETER : 테스트할 파라미터 값을 알려줍니다
+* ifnull()은 null이라면 앞의 값을 아니라면 뒤의 값을 출력해줍니다
+* dbs를 통해 어떤 database들이 돌아가고 있는지 확인할 수 있습니다.
+* sql map은 블로그를 보고 다시 정리하는 시간이 필요할 듯요
+* select(sleep(5))을 통해 thread를 잠재워 버리기 때문에 이런 testing 방식은 조심해야 합니다.
+* 따라서 timebase test는 빼고 하는 것이 좋습니다.
+### metasploit
+* bwapp-sqli inurl : github를 구글에 검색 후 첫번째 뜨는 github link에 접속하여 시작
+* 주소를 github에서 얻은 후 kali에 wget이라고 치고 뒤에 복사한 주소를 넣어줍니다 -> 그러면 저장이 됩니다.
+* 그리고 cp를 bwapp-sqli.rb /usr/share/metasploit-framework/modules/exploits/multi/http/bwapp-cmdi.rb 해줍니다.
+* msfconsole(metasploit를 사용해주게 해주는 shell)를 open해줍니다.
+* 이제 searcj bwapp을 하면 존재할텐데 여기서 name 부분의 값을 복사 후 use 뒤에 붙여넣기 해주면 됩니다.
+* 위의 과정을 통해 cmdi를 사용하기 위한 설정 과정이 끝났습니다.
+* CHECK을 통해 없는 것이나 취약한 것을 찾아줍니다
+* set RHOST 192.168.93.128(BEEBOX 주소)를 통해 RHOST를 설정시켜줄 수 있습니다.
+* run을 하게 되면 metapreter가 붙게 되는데 이는 흔히 얘기하는 backdoor 역할을 합니다.
+## blind sql injection
+* blind sql injection은 쿼리의 결과를 함과 거짓으로만 출력하는 페이지에서 사용하는 공격입니다.
+* 마치 장님이 길을 하나하나 짚고 가는 듯이 페이지의 반응을 확인하여 데이터베이스의 내용을 추측하는 공격
+* 원하는 데이터의 길이를 먼저 확인 (length 함수를 사용)
+* 다음 원하는 데이터의 스트링을 확인하여 유추( substr, substring,right, left와 같이 string을 비교해주는 함수를 사용)
+* blind sql 기초구문 [[ascii(substr((select table_name from information_schema.tables where table_type='base table' limit 0,1),1,1)); ]]
+* select length(select table_name form tables limit 0,1)) =14;와 같이 원하는 데이터의 길이가 입력한 값(14)와 동일한지 주어지는 true(1)와 false(0)를 통해 확인
+* substr은 하나씩 가져와서 비교하는 것이 가능해집니다.
+* blindsql은 수동으로 안합니다. 보통은 python을 사용합니다.
+* sql-injection - blind - boolean-based를 보면 참일때는 exist, 거짓일때는 not exist가 발생하는 것을 알 수 있습니다.
+* timebased는 앞에서 설명했듯이 거짓일 때는 시간이 안 걸리고 반환이되고 사실일 때는 시간이 걸려서 반환이 되게 됩니다. -> 시간이 우리가 받을 수 있는 반응
 
